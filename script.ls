@@ -15,16 +15,37 @@ label-gap = 24
 prepare-data = (input) ->
   ctx = document.query-selector \canvas .get-context \2d
   ctx.font = label-font
-  convert = (input) ->
+  convert = (input, x) ->
     for key, value of input
       ctx.measureText key .width
         text-width = ..width
         text-height = ..font-bounding-box-ascent + ..font-bounding-box-descent
+        width = text-width + 2*label-padding
       do
         label: key
-        children: convert value
-        width: text-width + 2*label-padding
-        height: text-height + 2*label-padding
+        children: convert value, x + width + label-gap
+        w: width
+        h: text-height + 2*label-padding
         text-width: text-width
         text-height: text-height
-  convert input
+        x: x
+        y: 0
+  convert input, 0
+
+upper-boundary = (node) ->
+  out = []
+  while node
+    out.push node.y - node.h/2
+    out.push node.x + node.w
+    node = node.children.0
+  out
+
+lower-boundary = (node) ->
+  out = []
+  loop
+    out.push node.y + node.h/2
+    out.push node.x + node.w
+    if node.children.length
+      node = node.children[*-1]
+    else
+      return out
