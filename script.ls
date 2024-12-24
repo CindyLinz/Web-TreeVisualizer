@@ -90,10 +90,10 @@ lower-boundary = (node) ->
 #   node-count({a: {}}) = 1
 #   node-count({a: {b: {}, c: {}}}) = 3
 #   node-count({a: {b: {}, c: {}}, x: {}}) = 4
-node-count = (node) ->
-  return 0 if !node or typeof! node != 'Object'
-  count = Object.keys(node).length
-  for key, value of node
+node-count = (data) ->
+  return 0 if !data or typeof! data != 'Object'
+  count = Object.keys(data).length
+  for key, value of data
     if typeof! value == 'Object'
       count += node-count(value)
   count
