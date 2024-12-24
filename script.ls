@@ -97,3 +97,9 @@ node-count = (node) ->
     if typeof! value == 'Object'
       count += node-count(value)
   count
+
+draw-node = (node, ctx) !->
+  ctx.begin-path!
+  ctx.round-rect node.x, node.y - node.h/2, node.w, node.h, label-gap/2
+  ctx.stroke!
+  ctx.fill-text node.label, node.x + label-padding, node.y
