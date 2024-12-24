@@ -85,3 +85,15 @@ lower-boundary = (node) ->
       node = node.children[*-1]
     else
       return out
+
+# node-count: count how many keys in the whole object
+#   node-count({a: {}}) = 1
+#   node-count({a: {b: {}, c: {}}}) = 3
+#   node-count({a: {b: {}, c: {}}, x: {}}) = 4
+node-count = (node) ->
+  return 0 if !node or typeof! node != 'Object'
+  count = Object.keys(node).length
+  for key, value of node
+    if typeof! value == 'Object'
+      count += node-count(value)
+  count
