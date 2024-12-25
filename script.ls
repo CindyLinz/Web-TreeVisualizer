@@ -178,6 +178,12 @@ get-forest-boundary = (forest) ->
     bottom >?= b >? node.y + node.h/2
   {left, right, top, bottom}
 
+shift-forest = (forest, box) !->
+  for node in forest
+    node.x -= box.left - label-gap
+    node.y -= box.top - label-gap
+    shift-forest node.children, box
+
 document.query-selector \textarea .add-event-listener \input, (ev) !->
   forest = JSON.parse ev.target.value
   draw forest
