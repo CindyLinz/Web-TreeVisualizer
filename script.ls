@@ -165,6 +165,19 @@ draw = (forest) !->
   ctx.stroke-style = '#000'
   draw-forest forest, ctx
 
+get-forest-boundary = (forest) ->
+  left = 1e300
+  right = -1e300
+  top = 1e300
+  bottom = -1e300
+  for node in forest
+    {left: l, right: r, top: t, bottom: b} = get-forest-boundary node.children
+    left <?= l <? node.x
+    right >?= r >? node.x + node.w
+    top <?= t <? node.y - node.h/2
+    bottom >?= b >? node.y + node.h/2
+  {left, right, top, bottom}
+
 document.query-selector \textarea .add-event-listener \input, (ev) !->
   forest = JSON.parse ev.target.value
   draw forest
