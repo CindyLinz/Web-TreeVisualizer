@@ -27,7 +27,7 @@ prepare-data = (input) ->
         label: key
         children: convert value, x + width + label-gap
         w: width
-        h: text-height + 2*label-padding
+        h: text-height + label-padding/2
         text-width: text-width
         text-height: text-height
         x: x
@@ -44,7 +44,7 @@ swing-up = (node, boundary, pre-init=void, lightly=no) !->
     y-boundary >?= boundary.2
     boundary.shift!
     boundary.shift!
-  node.y = y-boundary + label-gap + node.h/2
+  node.y = y-boundary + label-gap/2 + node.h/2
   if pre-init != void
     node.y >?= pre-init
   for c, i in node.children
@@ -63,7 +63,7 @@ swing-down = (node, boundary, pre-init=void, lightly=no) !->
     y-boundary <?= boundary.2
     boundary.shift!
     boundary.shift!
-  node.y = y-boundary - label-gap - node.h/2
+  node.y = y-boundary - label-gap/2 - node.h/2
   if pre-init != void
     node.y <?= pre-init
   node.children.reverse!
