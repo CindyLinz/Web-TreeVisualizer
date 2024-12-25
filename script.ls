@@ -99,7 +99,10 @@ lower-boundary = (node, boundary) ->
 draw-node = (node, ctx) !->
   ctx.begin-path!
   ctx.round-rect node.x, node.y - node.h/2, node.w, node.h, label-gap/2
+  ctx.fill-style = \#fff
+  ctx.fill!
   ctx.stroke!
+  ctx.fill-style = \#000
   ctx.fill-text node.label, node.x + label-padding, node.y
 
 draw-boundary = (boundary, color, ctx) !->
@@ -164,9 +167,11 @@ draw = (forest) !->
 
   canvas.width = box.right - box.left + 2 * label-gap
   canvas.height = box.bottom - box.top + 2 * label-gap
+  ctx.fill-style = \#ffc
+  ctx.fill-rect 0, 0, canvas.width, canvas.height
   ctx.font = label-font
-  ctx.text-baseline = 'middle'
-  ctx.stroke-style = '#000'
+  ctx.text-baseline = \middle
+  ctx.stroke-style = \#000
   draw-forest forest, ctx
 
 get-forest-boundary = (forest) ->
