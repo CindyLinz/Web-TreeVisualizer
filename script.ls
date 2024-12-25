@@ -100,17 +100,6 @@ lower-boundary = (node, boundary) ->
   boundary.unshift node.y + node.h/2, r
   boundary
 
-# node-count: count how many keys in the whole object
-#   node-count({a: {}}) = 1
-#   node-count({a: {b: {}, c: {}}}) = 3
-#   node-count({a: {b: {}, c: {}}, x: {}}) = 4
-node-count = (data) ->
-  count = Object.keys(data).length
-  for key, value of data
-    if typeof! value == 'Object'
-      count += node-count(value)
-  count
-
 draw-node = (node, ctx) !->
   ctx.begin-path!
   ctx.round-rect node.x, node.y - node.h/2, node.w, node.h, label-gap/2
