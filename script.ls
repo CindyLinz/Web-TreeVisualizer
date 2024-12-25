@@ -121,3 +121,11 @@ draw-forest = (forest, ctx) !->
       ctx.stroke!
       draw-forest elem.children, ctx
       draw-node elem, ctx
+
+# sum up all nodes' h value
+safe-height = (forest) ->
+  height = 0
+  for elem in forest
+    height += elem.h
+    height += safe-height elem.children
+  height
