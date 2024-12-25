@@ -104,6 +104,16 @@ draw-node = (node, ctx) !->
   ctx.stroke!
   ctx.fill-text node.label, node.x + label-padding, node.y
 
+draw-boundary = (boundary, color, ctx) !->
+  ctx.begin-path!
+  ctx.stroke-style = color
+  ctx.move-to 0, boundary.0
+  for i from 1 til boundary.length by 2
+    ctx.line-to boundary[i], boundary[i-1]
+    if i+1 < boundary.length
+      ctx.line-to boundary[i], boundary[i+1]
+  ctx.stroke!
+
 draw-forest = (forest, ctx) !->
   ctx.begin-path!
   ctx.move-to forest.0.x - label-gap/2, forest.0.y
