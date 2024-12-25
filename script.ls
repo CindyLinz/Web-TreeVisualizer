@@ -1,6 +1,8 @@
-label-font = '24px Arial'
+label-text-height = 24
+label-font = "#{label-text-height}px Arial"
 label-padding = 24
 label-gap = 24
+#low-bound = void
 
 # prepare-data function
 #   convert
@@ -17,7 +19,7 @@ prepare-data = (input) ->
   ctx.font = label-font
   convert = (input, x) ->
     for key, value of input
-      ctx.measureText key .width
+      ctx.measureText key
         text-width = ..width
         text-height = ..font-bounding-box-ascent + ..font-bounding-box-descent
         width = text-width + 2*label-padding
@@ -30,68 +32,79 @@ prepare-data = (input) ->
         text-height: text-height
         x: x
         y: 0
-  convert input, 0
+  convert input, 10
 
-swing-up = (node, boundary, pre-init) !->
-  y-boundary = boundary.0
-  if pre-init != void
-    y-boundary >?= pre-init
+swing-up = (node, boundary-up, boundary-down, pre-init=void, lightly=no) !->
   x2 = node.x + node.w
-  while boundary.1 < x2
-    y-boundary >?= boundary.2
-    boundary.shift!
-    boundary.shift!
+  while boundary-up.1 <= node.x
+    boundary-up.shift!
+    boundary-up.shift!
+  y-boundary = boundary-up.0
+  while boundary-up.1 < x2
+    y-boundary >?= boundary-up.2
+    boundary-up.shift!
+    boundary-up.shift!
   node.y = y-boundary + label-gap + node.h/2
+  if pre-init != void
+    node.y >?= pre-init
   for c, i in node.children
-    swing-up c, boundary, if i == node.children.length-1 then node.y - node.children.0.h/2 else void
+    swing-up c, boundary-up, boundary-down, if i == node.children.length-1 then node.y else void
     if i == 0
       node.y >?= c.y
     else
-      swing-down node.children[i-1], upper-boundary(c), void
-    boundary = lower-boundary c
+      void # swing-down node.children[i-1], boundary-up, upper-boundary(c, boundary-down), void
+    boundary-up = lower-boundary c, boundary-up
 
-swing-down = (node, boundary, pre-init) !->
-  y-boundary = boundary.0
-  if pre-init != void
-    y-boundary <?= pre-init
+swing-down = (node, boundary-up, boundary-down, pre-init=void, lightly=no) !->
   x2 = node.x + node.w
-  while boundary.1 < x2
-    y-boundary <?= boundary.2
-    boundary.shift!
-    boundary.shift!
+  while boundary-down.1 <= node.x
+    boundary-down.shift!
+    boundary-down.shift!
+  y-boundary = boundary-down.0
+  while boundary-down.1 < x2
+    y-boundary <?= boundary-down.2
+    boundary-down.shift!
+    boundary-down.shift!
   node.y = y-boundary - label-gap - node.h/2
-  for c, i in node.children.reverse!
-    swing-down c, boundary, if i == node.children.length-1 then node.y + node.children.0.h/2 else void
+  if pre-init != void
+    node.y <?= pre-init
+  node.children.reverse!
+  for c, i in node.children
+    swing-down c, boundary-up, boundary-down, if i == node.children.length-1 then node.y else void
     if i == 0
       node.y <?= c.y
     else
-      swing-up node.children[*-i], lower-boundary(c), void
-    boundary = upper-boundary c
+      void # swing-up node.children[*-i], lower-boundary(c, boundary-up), boundary-down, void
+    boundary-down = upper-boundary c, boundary-down
+  node.children.reverse!
 
-upper-boundary = (node) ->
-  out = []
-  while node
-    out.push node.y - node.h/2
-    out.push node.x + node.w
-    node = node.children.0
-  out
+upper-boundary = (node, boundary) ->
+  node.children.reverse!
+  for c in node.children
+    boundary = upper-boundary c, boundary
+  r = node.x + node.w
+  while boundary.1 <= r
+    boundary.shift!
+    boundary.shift!
+  boundary.unshift node.y - node.h/2, r
+  node.children.reverse!
+  boundary
 
-lower-boundary = (node) ->
-  out = []
-  loop
-    out.push node.y + node.h/2
-    out.push node.x + node.w
-    if node.children.length
-      node = node.children[*-1]
-    else
-      return out
+lower-boundary = (node, boundary) ->
+  for c in node.children
+    boundary = lower-boundary c, boundary
+  r = node.x + node.w
+  while boundary.1 <= r
+    boundary.shift!
+    boundary.shift!
+  boundary.unshift node.y + node.h/2, r
+  boundary
 
 # node-count: count how many keys in the whole object
 #   node-count({a: {}}) = 1
 #   node-count({a: {b: {}, c: {}}}) = 3
 #   node-count({a: {b: {}, c: {}}, x: {}}) = 4
 node-count = (data) ->
-  return 0 if !data or typeof! data != 'Object'
   count = Object.keys(data).length
   for key, value of data
     if typeof! value == 'Object'
@@ -105,6 +118,7 @@ draw-node = (node, ctx) !->
   ctx.fill-text node.label, node.x + label-padding, node.y
 
 draw-boundary = (boundary, color, ctx) !->
+  stroke-style = ctx.stroke-style
   ctx.begin-path!
   ctx.stroke-style = color
   ctx.move-to 0, boundary.0
@@ -113,6 +127,7 @@ draw-boundary = (boundary, color, ctx) !->
     if i+1 < boundary.length
       ctx.line-to boundary[i], boundary[i+1]
   ctx.stroke!
+  ctx.stroke-style = stroke-style
 
 draw-forest = (forest, ctx) !->
   ctx.begin-path!
@@ -130,7 +145,43 @@ draw-forest = (forest, ctx) !->
       ctx.line-to elem.x + elem.w + label-gap/2, elem.y
       ctx.stroke!
       draw-forest elem.children, ctx
-      draw-node elem, ctx
+    draw-node elem, ctx
+
+draw = (forest) !->
+  canvas = document.query-selector \canvas
+  ctx = canvas.get-context \2d
+  ctx.font = label-font
+  ctx.text-baseline = 'middle'
+  ctx.stroke-style = '#000'
+
+  forest = prepare-data forest
+  ctx.measureText \ROOT
+    root-text-width = ..width
+    root-text-height = ..font-bounding-box-ascent + ..font-bounding-box-descent
+    root-width = root-text-width + 2*label-gap
+  dummy-root = do
+    label: \ROOT
+    children: forest
+    h: root-text-height + 2*label-gap
+    w: root-width
+    x: 0 - root-width - label-gap
+    y: 0
+  window.root = dummy-root
+  #low-bound := safe-height forest
+  #debugger
+  swing-up dummy-root, [0, 1e300], [safe-height(forest), 1e300]
+  dummy-root.y = forest[*-1].y
+  bottom-boundary = lower-boundary dummy-root, [0, 1e300]
+  for i from 0 til bottom-boundary.length by 2
+    bottom-boundary[i] += label-gap
+  #draw-boundary bottom-boundary, \#f00, ctx
+  swing-down dummy-root, [0, 1e300], bottom-boundary
+
+  canvas.width = canvas.width
+  ctx.font = label-font
+  ctx.text-baseline = 'middle'
+  ctx.stroke-style = '#000'
+  draw-forest forest, ctx
 
 # sum up all nodes' h value
 safe-height = (forest) ->
@@ -139,3 +190,9 @@ safe-height = (forest) ->
     height += elem.h
     height += safe-height elem.children
   height
+
+document.query-selector \textarea .add-event-listener \input, (ev) !->
+  forest = JSON.parse ev.target.value
+  draw forest
+
+draw JSON.parse document.query-selector(\textarea).value
