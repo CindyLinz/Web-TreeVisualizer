@@ -159,7 +159,11 @@ draw = (forest) !->
     bottom-boundary[i] += label-gap
   swing-down dummy-root, bottom-boundary
 
-  canvas.width = canvas.width
+  box = get-forest-boundary forest
+  shift-forest forest, box
+
+  canvas.width = box.right - box.left + 2 * label-gap
+  canvas.height = box.bottom - box.top + 2 * label-gap
   ctx.font = label-font
   ctx.text-baseline = 'middle'
   ctx.stroke-style = '#000'
