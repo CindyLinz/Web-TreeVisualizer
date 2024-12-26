@@ -78,22 +78,24 @@ upper-boundary = (node, boundary) ->
   node.children.reverse!
   for c in node.children
     boundary = upper-boundary c, boundary
-  r = node.x + node.w
+  y = node.y - node.h/2
+  r = node.x + node.w + label-gap
   while boundary.1 <= r
     boundary.shift!
     boundary.shift!
-  boundary.unshift node.y - node.h/2, r
+  boundary.unshift y, r
   node.children.reverse!
   boundary
 
 lower-boundary = (node, boundary) ->
   for c in node.children
     boundary = lower-boundary c, boundary
-  r = node.x + node.w
+  y = node.y + node.h/2
+  r = node.x + node.w + label-gap
   while boundary.1 <= r
     boundary.shift!
     boundary.shift!
-  boundary.unshift node.y + node.h/2, r
+  boundary.unshift y, r
   boundary
 
 draw-node = (node, ctx) !->
