@@ -139,8 +139,6 @@ draw = (forest) !->
   canvas = document.query-selector \canvas
   ctx = canvas.get-context \2d
   ctx.font = label-font
-  ctx.text-baseline = 'middle'
-  ctx.stroke-style = '#000'
 
   forest = prepare-data forest
   ctx.measureText \ROOT
